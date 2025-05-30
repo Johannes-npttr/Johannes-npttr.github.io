@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Werwolf Erzähler</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 50px; }
+    button { font-size: 1.5em; padding: 10px 20px; }
+  </style>
+</head>
+<body>
+  <h1>Werwolf – Erzählerhilfe</h1>
+  <div id="phase">Drücke Start, um das Spiel zu beginnen.</div>
+  <br>
+  <button onclick="naechstePhase()">Nächste Phase</button>
+
+  <script>
+    const phasen = [
+      "Alle schlafen ein.",
+      "Werwölfe wachen auf.",
+      "Werwölfe wählen ihr Opfer.",
+      "Werwölfe schlafen ein.",
+      "Seher wacht auf.",
+      "Seher wählt eine Person.",
+      "Seher schläft ein.",
+      "Alle wachen auf."
+    ];
+    let index = 0;
+
+    function naechstePhase() {
+      if (index < phasen.length) {
+        document.getElementById("phase").textContent = phasen[index];
+        index++;
+      } else {
+        document.getElementById("phase").textContent = "Neue Nacht beginnt.";
+        index = 0;
+      }
+    }
+  </script>
+</body>
+</html>
