@@ -2,40 +2,174 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Werwolf Erzähler</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Werwolf Spiel</title>
   <style>
-    body { font-family: sans-serif; text-align: center; padding: 50px; }
-    button { font-size: 1.5em; padding: 10px 20px; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .hidden { display: none; }
+    button { padding: 10px 20px; font-size: 16px; margin: 10px; }
   </style>
 </head>
 <body>
-  <h1>Werwolf – Erzählerhilfe</h1>
-  <div id="phase">Drücke Start, um das Spiel zu beginnen.</div>
-  <br>
-  <button onclick="naechstePhase()">Nächste Phase</button>
+
+  <div style="position: absolute; top: 10px; right: 10px;">
+    <button onclick="resetGame()" style="background: red; color: white;">Spiel zurücksetzen</button>
+  </div>
+
+  <!-- SPIELSTART -->
+  <div id="setup">
+    <h1>Werwolf Spiel starten</h1>
+    <label>Spieleranzahl: <input type="number" id="playerCount" min="3" max="20" /></label><br>
+    <button onclick="goToRoleSelection()">Weiter</button>
+  </div>
+
+  <!-- ROLLEN AUSWAHL -->
+  <div id="roleSetup" class="hidden">
+    <h2>Rollen auswählen</h2>
+    <label>Werwölfe: <input type="number" id="wolvesCount" min="1" /></label><br>
+    <label>Seher: <input type="number" id="seerCount" min="0" /></label><br>
+    <label>Hexe: <input type="number" id="witchCount" min="0" /></label><br>
+    <label>Dorfbewohner: (füllt Rest auf)</label><br>
+    <button onclick="assignRoles()">Rollen zuteilen & Rolle anzeigen</button>
+  </div>
+
+  <!-- ROLLENANZEIGE FÜR SPIELER -->
+  <div id="roleReveal" class="hidden">
+    <h2>Spieler <span id="currentPlayerNumber"></span>, bitte übernehmen</h2>
+    <button onclick="showRole()">Rolle anzeigen</button>
+    <p id="roleText" class="hidden"></p>
+    <button id="nextPlayerButton" class="hidden" onclick="nextPlayer()">Nächster Spieler</button>
+  </div>
+
+  <!-- ERZÄHLERMODUS -->
+  <div id="narratorMode" class="hidden">
+    <h2>Erzähler-Modus</h2>
+    <p>Klicke auf einen Namen, um die Rolle zu sehen:</p>
+    <div id="playerList"></div>
+  </div>
 
   <script>
-    const phasen = [
-      "Alle schlafen ein.",
-      "Werwölfe wachen auf.",
-      "Werwölfe wählen ihr Opfer.",
-      "Werwölfe schlafen ein.",
-      "Seher wacht auf.",
-      "Seher wählt eine Person.",
-      "Seher schläft ein.",
-      "Alle wachen auf."
-    ];
-    let index = 0;
+    // 🔁 Beim Laden: Spiel wiederherstellen
+    window.onload = function () {
+      const savedData = localStorage.getItem('werwolfGame');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        playerData = data.playerData;
+        currentPlayerIndex = data.currentPlayerIndex || 0;
 
-    function naechstePhase() {
-      if (index < phasen.length) {
-        document.getElementById("phase").textContent = phasen[index];
-        index++;
-      } else {
-        document.getElementById("phase").textContent = "Neue Nacht beginnt.";
-        index = 0;
+        // Direkt zum passenden Abschnitt springen:
+        if (currentPlayerIndex < playerData.length) {
+          document.getElementById('setup').classList.add('hidden');
+          document.getElementById('roleReveal').classList.remove('hidden');
+          updatePlayerReveal();
+        } else {
+          document.getElementById('setup').classList.add('hidden');
+          document.getElementById('narratorMode').classList.remove('hidden');
+          showNarratorView();
+        }
       }
+    };
+
+    let totalPlayers = 0;
+    let roles = [];
+    let currentPlayerIndex = 0;
+    let playerData = [];
+
+    function goToRoleSelection() {
+      totalPlayers = parseInt(document.getElementById('playerCount').value);
+      if (!totalPlayers || totalPlayers < 3) {
+        alert("Mindestens 3 Spieler nötig!");
+        return;
+      }
+      document.getElementById('setup').classList.add('hidden');
+      document.getElementById('roleSetup').classList.remove('hidden');
+    }
+
+    // 🧠 Beim Rollenzuteilen: Spiel speichern
+    function assignRoles() {
+      const wolves = parseInt(document.getElementById('wolvesCount').value) || 0;
+      const seers = parseInt(document.getElementById('seerCount').value) || 0;
+      const witches = parseInt(document.getElementById('witchCount').value) || 0;
+      const villagers = totalPlayers - wolves - seers - witches;
+
+      if (villagers < 0) {
+        alert("Zu viele Spezialrollen für die Spieleranzahl!");
+        return;
+      }
+
+      roles = [
+        ...Array(wolves).fill("Werwolf"),
+        ...Array(seers).fill("Seher"),
+        ...Array(witches).fill("Hexe"),
+        ...Array(villagers).fill("Dorfbewohner")
+      ];
+
+      roles = roles.sort(() => Math.random() - 0.5); // Rollen mischen
+      playerData = roles.map((role, index) => ({ name: `Spieler ${index + 1}`, role }));
+
+      // Nach Rollenvergabe speichern:
+      localStorage.setItem('werwolfGame', JSON.stringify({
+        playerData,
+        currentPlayerIndex
+      }));
+
+      document.getElementById('roleSetup').classList.add('hidden');
+      document.getElementById('roleReveal').classList.remove('hidden');
+      currentPlayerIndex = 0;
+      updatePlayerReveal();
+    }
+
+    function updatePlayerReveal() {
+      document.getElementById('roleText').classList.add('hidden');
+      document.getElementById('nextPlayerButton').classList.add('hidden');
+      document.getElementById('currentPlayerNumber').textContent = playerData[currentPlayerIndex].name;
+    }
+
+    function showRole() {
+      document.getElementById('roleText').textContent = "Deine Rolle: " + playerData[currentPlayerIndex].role;
+      document.getElementById('roleText').classList.remove('hidden');
+      document.getElementById('nextPlayerButton').classList.remove('hidden');
+    }
+
+    // 🧠 Beim Weiterklicken speichern:
+    function nextPlayer() {
+      currentPlayerIndex++;
+      if (currentPlayerIndex >= playerData.length) {
+        document.getElementById('roleReveal').classList.add('hidden');
+        document.getElementById('narratorMode').classList.remove('hidden');
+        showNarratorView();
+      } else {
+        updatePlayerReveal();
+      }
+
+      // Aktualisieren im Speicher
+      localStorage.setItem('werwolfGame', JSON.stringify({
+        playerData,
+        currentPlayerIndex
+      }));
+    }
+
+    function showNarratorView() {
+      const container = document.getElementById('playerList');
+      container.innerHTML = '';
+      playerData.forEach((player, index) => {
+        const btn = document.createElement('button');
+        btn.textContent = player.name;
+        btn.onclick = () => alert(`${player.name} ist ${player.role}`);
+        container.appendChild(btn);
+      });
+    }
+
+    // 🔴 Spiel zurücksetzen
+    function resetGame() {
+      localStorage.removeItem('werwolfGame');
+      location.reload(); // Seite neu laden
     }
   </script>
+
 </body>
 </html>
