@@ -130,9 +130,9 @@ function showRole() {
   // Bildpfad basierend auf der Rolle
   if (role === "Werwolf") {
     const randomWolfIndex = Math.floor(Math.random() * 3) + 1; // Zufällige Auswahl (z. B. Werwolf1.png, Werwolf2.png)
-    roleImage.src = `roles/Werwolf${randomWolfIndex}.png`;
+    roleImage.src = `images/roles/Werwolf${randomWolfIndex}.png`;
   } else {
-    roleImage.src = `roles/${role}.png`; // Bild basierend auf der Rolle
+    roleImage.src = `images/roles/${role}.png`; // Bild basierend auf der Rolle
   }
 
   roleText.textContent = `Deine Rolle: ${role}`;
