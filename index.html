@@ -9,9 +9,43 @@
       font-family: sans-serif;
       text-align: center;
       padding: 20px;
+      background-image: url('images/düsterwald.jpg'); /* Pfad zum Düsterwald-Bild */
+      background-size: cover; /* Bild wird skaliert, um den gesamten Bildschirm zu füllen */
+      background-position: center; /* Bild wird zentriert */
+      background-repeat: no-repeat; /* Bild wird nicht wiederholt */
+      color: white; /* Textfarbe für bessere Lesbarkeit */
     }
+
     .hidden { display: none; }
-    button { padding: 10px 20px; font-size: 16px; margin: 10px; }
+
+    button {
+      padding: 15px 30px; /* Größere Buttons */
+      font-size: 18px; /* Größere Schrift */
+      margin: 15px; /* Mehr Abstand */
+      border-radius: 8px; /* Abgerundete Ecken */
+      border: 1px solid #ccc; /* Leichter Rahmen */
+      background-color: rgba(240, 240, 240, 0.8); /* Transparenter Hintergrund */
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Glow-Effekt */
+      transition: box-shadow 0.3s ease; /* Animation für den Glow-Effekt */
+    }
+
+    button:hover {
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); /* Stärkerer Glow-Effekt beim Hover */
+    }
+
+    button:active {
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); /* Glow-Effekt beim Klick */
+    }
+
+    input[type="number"], input[type="checkbox"] {
+      font-size: 16px; /* Größere Eingabefelder */
+      margin: 10px;
+      background-color: rgba(255, 255, 255, 0.8); /* Transparenter Hintergrund */
+      border: 1px solid #ccc; /* Rahmen */
+      border-radius: 4px; /* Abgerundete Ecken */
+      padding: 5px;
+    }
   </style>
 </head>
 <body>
@@ -39,6 +73,7 @@
     <label>Leibwächter: <input type="checkbox" id="bodyguardEnabled" /></label><br>
     <label>Dorfmatratze: <input type="checkbox" id="villageMattressEnabled" /></label><br>
     <label>Jäger: <input type="checkbox" id="hunterEnabled" /></label><br>
+    <label>Wildes Kind: <input type="checkbox" id="wildChildEnabled" /></label><br>
     <label>Dorfbewohner: (füllt Rest auf)</label><br>
     <button onclick="assignRoles()">Rollen zuteilen & Rolle anzeigen</button>
   </div>

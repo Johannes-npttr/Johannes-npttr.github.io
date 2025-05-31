@@ -10,9 +10,11 @@ let playerData = [];
 let deadPlayers = []; // Liste der ausgeschiedenen Spieler
 let healerProtected = null; // Spielername, der durch Heiler geschützt ist
 let priestUsed = false; // Der Priester kann nur einmal segnen
-let bodyguardHealth = 1; // Der Leibwächter hat eine "Lebenspunkt"-Mechanik
 let accusedPlayers = {}; // Liste der angeklagten Spieler und ihre Stimmen
 let mayor = null; // Name des Bürgermeisters
+let nightActions = []; // Temporäre Liste für Nachtaktionen
+let bodyguardProtected = null; // Spielername, der vom Leibwächter geschützt wird
+let bodyguardHealth = 1; // Lebenspunkte des Leibwächters
 
 // 🔁 Beim Laden: Spiel wiederherstellen
 window.onload = function () {
@@ -117,8 +119,26 @@ function updatePlayerReveal() {
 }
 
 function showRole() {
-  document.getElementById('roleText').textContent = "Deine Rolle: " + playerData[currentPlayerIndex].role;
-  document.getElementById('roleText').classList.remove('hidden');
+  const currentPlayer = playerData[currentPlayerIndex];
+  const role = currentPlayer.role;
+
+  const roleText = document.getElementById('roleText');
+  const roleImage = document.createElement('img'); // Neues Bild-Element
+  roleImage.style.maxWidth = "80%"; // Größe des Bildes anpassen
+  roleImage.style.marginTop = "20px";
+
+  // Bildpfad basierend auf der Rolle
+  if (role === "Werwolf") {
+    const randomWolfIndex = Math.floor(Math.random() * 3) + 1; // Zufällige Auswahl (z. B. Werwolf1.png, Werwolf2.png)
+    roleImage.src = `roles/Werwolf${randomWolfIndex}.png`;
+  } else {
+    roleImage.src = `roles/${role}.png`; // Bild basierend auf der Rolle
+  }
+
+  roleText.textContent = `Deine Rolle: ${role}`;
+  roleText.classList.remove('hidden');
+  roleText.appendChild(roleImage); // Bild hinzufügen
+
   document.getElementById('nextPlayerButton').classList.remove('hidden');
 }
 
@@ -262,7 +282,6 @@ function updateNightText() {
 function nextNightPhase() {
   currentPhaseIndex++;
   if (currentPhaseIndex >= filteredPhases.length) {
-    // Nacht ist vorbei – zurück zum Erzähler-Modus
     document.getElementById('nightPhase').classList.add('hidden');
     document.getElementById('narratorMode').classList.remove('hidden');
     currentNight++;
@@ -275,8 +294,8 @@ function nextNightPhase() {
       deadPlayers
     }));
 
+    processNightActions(); // Verarbeite alle Nachtaktionen
     showNightSummary(); // Zeige Zusammenfassung der Nacht
-    checkWinConditions(); // Siegbedingungen überprüfen
   } else {
     updateNightText();
   }
@@ -498,49 +517,11 @@ function showPriestOverlay() {
 
 // Wenn der Spieler vom Heiler geschützt ist, stirbt er nicht
 function killPlayer(player, overlay) {
-  if (player.name === healerProtected) {
-    alert(`${player.name} wurde geschützt und überlebt die Nacht!`);
-    healerProtected = null; // Schutz ist nur für diese Nacht
-    document.body.removeChild(overlay);
-    nextNightPhase();
-    return;
-  }
-
-  const bodyguard = playerData.find(p => p.role === "Leibwächter" && !deadPlayers.includes(p.name));
-  if (bodyguard && healerProtected === player.name) {
-    if (bodyguardHealth > 0) {
-      bodyguardHealth--;
-      alert(`${bodyguard.name} hat den Angriff abgewehrt, aber ist jetzt verwundbar!`);
-    } else {
-      deadPlayers.push(bodyguard.name);
-      alert(`${bodyguard.name} wurde getötet, da er erneut angegriffen wurde.`);
-    }
-    document.body.removeChild(overlay);
-    nextNightPhase();
-    return;
-  }
-
-  deadPlayers.push(player.name);
-  alert(`${player.name} ist gestorben und aus dem Spiel ausgeschieden.`);
-
-  // Wenn der Jäger stirbt, aktiviert seine Fähigkeit
-  if (player.role === "Jäger") {
-    alert(`${player.name} war der Jäger und kann noch jemanden töten.`);
-    showHunterOverlay();
-  }
-
-  // Überprüfe, ob einer der Verliebten gestorben ist
-  checkWinConditions();
-
-  localStorage.setItem('werwolfGame', JSON.stringify({
-    playerData,
-    currentPlayerIndex,
-    lovers,
-    currentNight,
-    deadPlayers
-  }));
+  console.log(`Angriff auf: ${player.name}`);
+  nightActions.push({ type: "attack", target: player.name });
+  alert(`${player.name} wurde von den Werwölfen angegriffen.`);
   document.body.removeChild(overlay);
-  nextNightPhase(); // Weiter zur nächsten Nachtphase
+  nextNightPhase();
 }
 
 // Integration der Heiler-Phase in die Nachtphasen
@@ -602,7 +583,7 @@ function showSeerOverlay() {
 let currentPhaseIndex = 0;
 let filteredPhases = [];
 function showWitchOverlay() {
-  const lastKilled = deadPlayers[deadPlayers.length - 1]; // Das Opfer der Werwölfe
+  const lastKilled = nightActions.find(action => action.type === "attack")?.target || null;
   const overlay = document.createElement('div');
   overlay.style.position = "fixed";
   overlay.style.top = "0";
@@ -618,40 +599,23 @@ function showWitchOverlay() {
   overlay.style.zIndex = "1000";
 
   const message = document.createElement('p');
-  message.textContent = lastKilled ? `Opfer der Werwölfe: ${lastKilled}` : "Diese Nacht wurde niemand getötet.";
+  message.textContent = lastKilled ? `Opfer der Werwölfe: ${lastKilled}` : "Diese Nacht wurde niemand angegriffen.";
   overlay.appendChild(message);
 
-  // Heiloption: Hexe kann das Opfer der Werwölfe heilen
-  if (!witchHealUsed) {
-    const healTitle = document.createElement('p');
-    healTitle.textContent = "Optional: Das Opfer der Werwölfe heilen";
-    overlay.appendChild(healTitle);
-
+  if (!witchHealUsed && lastKilled) {
     const healButton = document.createElement('button');
-    healButton.textContent = lastKilled ? `Heile ${lastKilled}` : "Heiltrank verwenden (kein Effekt)";
+    healButton.textContent = `Heile ${lastKilled}`;
     healButton.style.margin = "10px";
     healButton.onclick = () => {
-      if (lastKilled) {
-        // Überprüfen, ob die Dorfmatratze bei der Person schläft
-        if (protectedByMattress === lastKilled) {
-          alert(`${lastKilled} wurde geheilt und durch die Dorfmatratze geschützt. Niemand stirbt diese Nacht!`);
-        } else {
-          // Spieler aus der Liste der Toten entfernen
-          deadPlayers = deadPlayers.filter(name => name !== lastKilled);
-          alert(`${lastKilled} wurde geheilt und lebt weiter!`);
-        }
-      } else {
-        // Kein Effekt, aber Heiltrank wird verbraucht
-        alert("Der Heiltrank wurde verwendet, hat aber keinen Effekt.");
-      }
-      witchHealUsed = true; // Heiltrank wird verbraucht
+      nightActions.push({ type: "heal", target: lastKilled });
+      witchHealUsed = true;
+      alert(`${lastKilled} wird von der Hexe geheilt.`);
       document.body.removeChild(overlay);
       nextNightPhase();
     };
     overlay.appendChild(healButton);
   }
 
-  // Tötungsoption: Hexe kann einen beliebigen Spieler töten
   if (!witchKillUsed) {
     const killTitle = document.createElement('p');
     killTitle.textContent = "Optional: Einen Spieler töten";
@@ -668,9 +632,9 @@ function showWitchOverlay() {
         btn.textContent = player.name;
         btn.style.margin = "10px";
         btn.onclick = () => {
-          deadPlayers.push(player.name);
+          nightActions.push({ type: "kill", target: player.name });
           witchKillUsed = true;
-          alert(`${player.name} wurde von der Hexe getötet.`);
+          alert(`${player.name} wird von der Hexe getötet.`);
           document.body.removeChild(overlay);
           nextNightPhase();
         };
@@ -681,7 +645,6 @@ function showWitchOverlay() {
     overlay.appendChild(playerButtons);
   }
 
-  // Möglichkeit, nichts zu tun
   const skipBtn = document.createElement('button');
   skipBtn.textContent = "Nichts tun";
   skipBtn.style.margin = "10px";
@@ -767,7 +730,7 @@ function showBodyguardOverlay() {
       btn.textContent = player.name;
       btn.style.margin = "10px";
       btn.onclick = () => {
-        healerProtected = player.name; // Leibwächter schützt Spieler
+        bodyguardProtected = player.name; // Leibwächter schützt Spieler
         alert(`${player.name} wird vom Leibwächter geschützt.`);
         document.body.removeChild(overlay);
         nextNightPhase();
@@ -1075,4 +1038,48 @@ function showHunterOverlay() {
 
   overlay.appendChild(playerButtons);
   document.body.appendChild(overlay);
+}
+
+function processNightActions() {
+  const healedPlayers = nightActions
+    .filter(action => action.type === "heal")
+    .map(action => action.target);
+
+  const killedPlayers = nightActions
+    .filter(action => action.type === "attack" || action.type === "kill")
+    .map(action => action.target)
+    .filter(player => !healedPlayers.includes(player)); // Spieler, die geheilt wurden, sterben nicht
+
+  killedPlayers.forEach(player => {
+    if (player === bodyguardProtected) {
+      const bodyguard = playerData.find(p => p.role === "Leibwächter" && !deadPlayers.includes(p.name));
+      if (bodyguard) {
+        if (bodyguardHealth > 0) {
+          bodyguardHealth--;
+          alert(`${bodyguard.name} hat den Angriff abgewehrt, aber ist jetzt verwundbar!`);
+        } else {
+          deadPlayers.push(bodyguard.name);
+          alert(`${bodyguard.name} wurde getötet, da er erneut angegriffen wurde.`);
+        }
+      }
+    } else {
+      deadPlayers.push(player);
+      alert(`${player} ist gestorben.`);
+    }
+  });
+
+  // Überprüfe Verliebte
+  lovers.forEach(lover => {
+    if (deadPlayers.includes(lover.name)) {
+      lovers.forEach(otherLover => {
+        if (!deadPlayers.includes(otherLover.name)) {
+          deadPlayers.push(otherLover.name);
+          alert(`${otherLover.name} ist gestorben, da ${lover.name} gestorben ist.`);
+        }
+      });
+    }
+  });
+
+  nightActions = []; // Aktionen zurücksetzen
+  checkWinConditions(); // Siegbedingungen überprüfen
 }
