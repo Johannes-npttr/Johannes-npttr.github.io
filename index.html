@@ -4,61 +4,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Werwolf Spiel</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 20px;
-      background-image: url('images/Düsterwald.JPG'); /* Pfad zum Düsterwald-Bild */
-      background-size: cover; /* Bild wird skaliert, um den gesamten Bildschirm zu füllen */
-      background-position: center; /* Bild wird zentriert */
-      background-repeat: no-repeat; /* Bild wird nicht wiederholt */
-      color: white; /* Textfarbe für bessere Lesbarkeit */
-    }
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://use.typekit.net/ilr6wzf.css">
 
-    .hidden { display: none; }
-
-    button {
-      padding: 15px 30px; /* Größere Buttons */
-      font-size: 18px; /* Größere Schrift */
-      margin: 15px; /* Mehr Abstand */
-      border-radius: 8px; /* Abgerundete Ecken */
-      border: 1px solid #ccc; /* Leichter Rahmen */
-      background-color: rgba(240, 240, 240, 0.8); /* Transparenter Hintergrund */
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Glow-Effekt */
-      transition: box-shadow 0.3s ease; /* Animation für den Glow-Effekt */
-    }
-
-    button:hover {
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); /* Stärkerer Glow-Effekt beim Hover */
-    }
-
-    button:active {
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); /* Glow-Effekt beim Klick */
-    }
-
-    input[type="number"], input[type="checkbox"] {
-      font-size: 16px; /* Größere Eingabefelder */
-      margin: 10px;
-      background-color: rgba(255, 255, 255, 0.8); /* Transparenter Hintergrund */
-      border: 1px solid #ccc; /* Rahmen */
-      border-radius: 4px; /* Abgerundete Ecken */
-      padding: 5px;
-    }
-  </style>
 </head>
 <body>
-
-  <div style="position: absolute; bottom: 10px; right: 10px;">
-    <button onclick="resetGame()" style="background: red; color: white; padding: 5px 10px; font-size: 14px; border-radius: 4px;">Zurücksetzen</button>
-  </div>
+  <div class="background"></div>
+  <img src="images/home.png" 
+  alt="Neues Spiel" 
+  onclick="resetGame()" 
+  style="position: fixed; 
+         bottom: 20px; 
+         right: 20px; 
+         width: 60px; 
+         height: 60px; 
+         cursor: pointer; 
+         box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Glow-Effekt */
+    transition: box-shadow 0.3s ease; /* Animation für den Glow-Effekt */
+    border-radius: 50px; /* Abgerundete Ecken */
+    border: 1px solid #ccc; /* Leichter Rahmen */
+         z-index: 1000;">
 
   <!-- SPIELSTART -->
   <div id="setup">
-    <h1>Werwolf Spiel starten</h1>
-    <label>Spieleranzahl: <input type="number" id="playerCount" min="3" max="20" /></label><br>
-    <button onclick="goToRoleSelection()">Weiter</button>
+    <img src="images/Werwolf_header.png" style="width: 400px; padding-top: 30px; display: block; margin: 0 auto;" />
+    <label style="display: block; margin-top: 20px;">Spieleranzahl: 
+      <input type="number" id="playerCount" min="3" max="20" />
+    </label><br>
+    <button onclick="goToRoleSelection()" style="display: block; margin: 0 auto;">Spiel starten</button>
   </div>
 
   <!-- ROLLEN AUSWAHL -->
@@ -67,24 +40,40 @@
     <label>Werwölfe: <input type="number" id="wolvesCount" min="1" /></label><br>
     <label>Seher: <input type="checkbox" id="seerEnabled" /></label><br>
     <label>Hexe: <input type="checkbox" id="witchEnabled" /></label><br>
-    <label>Armor: <input type="checkbox" id="armorEnabled" /></label><br>
+    <label>Amor: <input type="checkbox" id="armorEnabled" /></label><br>    
+    <label>Blinzelmädchen: <input type="checkbox" id="beholderEnabled" /></label><br>
     <label>Heiler: <input type="checkbox" id="healerEnabled" /></label><br>
     <label>Priester: <input type="checkbox" id="priestEnabled" /></label><br>
     <label>Leibwächter: <input type="checkbox" id="bodyguardEnabled" /></label><br>
     <label>Dorfmatratze: <input type="checkbox" id="villageMattressEnabled" /></label><br>
     <label>Jäger: <input type="checkbox" id="hunterEnabled" /></label><br>
-    <label>Wildes Kind: <input type="checkbox" id="wildChildEnabled" /></label><br>
-    <label>Dorfbewohner: (füllt Rest auf)</label><br>
-    <button onclick="assignRoles()">Rollen zuteilen & Rolle anzeigen</button>
+    <label>Wildes Kind: <input type="checkbox" id="wildChildEnabled" /></label><br>    <button onclick="assignRoles()">Rollen zuteilen</button>
   </div>
 
-  <!-- ROLLENANZEIGE FÜR SPIELER -->
-  <div id="roleReveal" class="hidden">
-    <h2>Spieler <span id="currentPlayerNumber"></span>, bitte übernehmen</h2>
-    <button onclick="showRole()">Rolle anzeigen</button>
-    <p id="roleText" class="hidden"></p>
-    <button id="nextPlayerButton" class="hidden" onclick="nextPlayer()">Nächster Spieler</button>
+<!-- ROLLENANZEIGE FÜR SPIELER -->
+<div id="roleReveal" class="hidden">
+  <h2><span id="currentPlayerNumber"></span>, <br>bitte übernehmen</h2>
+  <button onclick="showRole()">Rolle anzeigen</button>
+
+  <div id="roleText" class="hidden">
+    <p>Deine Rolle:</p>
+    
+    <!-- Karten-Flip-Container -->
+    <div id="card" class="card-container hidden">
+      <div class="card">
+        <div class="card-face front">
+          <img id="roleFrontImage" src="" alt="Vorderseite">
+        </div>
+        <div class="card-face back">
+          <img id="roleBackImage" src="" alt="Rückseite">
+        </div>
+      </div>
+    </div>
   </div>
+
+  <button id="nextPlayerButton" class="hidden" onclick="nextPlayer()">Nächster Spieler</button>
+</div>
+
 
   <!-- ERZÄHLERMODUS -->
   <div id="narratorMode" class="hidden">

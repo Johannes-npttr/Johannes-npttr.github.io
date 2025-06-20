@@ -54,8 +54,56 @@ function goToRoleSelection() {
     alert("Mindestens 3 Spieler nötig!");
     return;
   }
-  document.getElementById('setup').classList.add('hidden');
-  document.getElementById('roleSetup').classList.remove('hidden');
+
+  // Overlay für Namenseingabe
+  const overlay = document.createElement('div');
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100vw";
+  overlay.style.height = "100vh";
+  overlay.style.backgroundColor = "rgba(0,0,0,0.85)";
+  overlay.style.zIndex = "2000";
+  overlay.style.display = "flex";
+  overlay.style.flexDirection = "column";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.color = "white";
+
+  const title = document.createElement('h2');
+  title.textContent = "Bitte gib die Namen aller Spieler ein:";
+  overlay.appendChild(title);
+
+  const nameInputs = [];
+  for (let i = 0; i < totalPlayers; i++) {
+    const input = document.createElement('input');
+    input.type = "text";
+    input.placeholder = `Spieler ${i + 1}`;
+    input.style.margin = "10px";
+    input.style.fontSize = "18px";
+    overlay.appendChild(input);
+    nameInputs.push(input);
+  }
+
+  const button = document.createElement('button');
+  button.textContent = "Weiter";
+  button.style.marginTop = "20px";
+  button.onclick = () => {
+    // Prüfe, dass alle Namen eingegeben wurden
+    const names = nameInputs.map(inp => inp.value.trim());
+    if (names.some(name => !name)) {
+      alert("Bitte alle Namen eingeben!");
+      return;
+    }
+    // Speichere Namen für später
+    window.playerNames = names;
+    document.body.removeChild(overlay);
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('roleSetup').classList.remove('hidden');
+  };
+  overlay.appendChild(button);
+
+  document.body.appendChild(overlay);
 }
 
 function assignRoles() {
@@ -64,9 +112,11 @@ function assignRoles() {
   const witchEnabled = document.getElementById('witchEnabled').checked;
   const armorEnabled = document.getElementById('armorEnabled').checked;
   const healerEnabled = document.getElementById('healerEnabled').checked;
+  const beholderEnabled = document.getElementById('beholderEnabled').checked;
+  const wildChildEnabled = document.getElementById('wildChildEnabled').checked;
   const priestEnabled = document.getElementById('priestEnabled').checked;
   const bodyguardEnabled = document.getElementById('bodyguardEnabled').checked;
-  const hunterEnabled = document.getElementById('hunterEnabled').checked; // Neue Rolle: Jäger
+  const hunterEnabled = document.getElementById('hunterEnabled').checked;
   const villageMattressEnabled = document.getElementById('villageMattressEnabled').checked;
 
   let specialRoles = 0;
@@ -76,17 +126,21 @@ function assignRoles() {
   if (healerEnabled) specialRoles++;
   if (priestEnabled) specialRoles++;
   if (bodyguardEnabled) specialRoles++;
-  if (hunterEnabled) specialRoles++; // Zähler für Jäger
+  if (beholderEnabled) specialRoles++;
+  if (wildChildEnabled) specialRoles++;
+  if (hunterEnabled) specialRoles++;
   if (villageMattressEnabled) specialRoles++;
 
   let villagers = totalPlayers - wolves - specialRoles;
   let roles = [
     ...Array(wolves).fill("Werwolf"),
-    ...(seerEnabled ? ["Seher"] : []),
+    ...(seerEnabled ? ["Seherin"] : []),
     ...(witchEnabled ? ["Hexe"] : []),
-    ...(armorEnabled ? ["Armor"] : []),
+    ...(armorEnabled ? ["Amor"] : []),
     ...(healerEnabled ? ["Heiler"] : []),
     ...(priestEnabled ? ["Priest"] : []),
+    ...(beholderEnabled ? ["Blinzelmädchen"] : []),
+    ...(wildChildEnabled ? ["Wildes Kind"] : []),
     ...(bodyguardEnabled ? ["Leibwächter"] : []),
     ...(hunterEnabled ? ["Jäger"] : []), // Neue Rolle: Jäger
     ...(villageMattressEnabled ? ["Dorfmatratze"] : []),
@@ -97,9 +151,14 @@ function assignRoles() {
     return;
   }
 
-  roles = [...roles, ...Array(villagers).fill("Dorfbewohner")];
+roles = [...roles, ...Array(villagers).fill("Dorfbewohner")];
   roles = roles.sort(() => Math.random() - 0.5); // Rollen mischen
-  playerData = roles.map((role, index) => ({ name: `Spieler ${index + 1}`, role }));
+
+  // Namen übernehmen!
+  playerData = roles.map((role, index) => ({
+    name: window.playerNames ? window.playerNames[index] : `Spieler ${index + 1}`,
+    role
+  }));
 
   localStorage.setItem('werwolfGame', JSON.stringify({
     playerData,
@@ -123,24 +182,41 @@ function showRole() {
   const role = currentPlayer.role;
 
   const roleText = document.getElementById('roleText');
-  const roleImage = document.createElement('img'); // Neues Bild-Element
-  roleImage.style.maxWidth = "80%"; // Größe des Bildes anpassen
-  roleImage.style.marginTop = "20px";
+  const cardContainer = document.getElementById('card');
+  const card = cardContainer.querySelector('.card');
+  const frontImage = document.getElementById('roleFrontImage');
+  const backImage = document.getElementById('roleBackImage');
 
-  // Bildpfad basierend auf der Rolle
+  // Bildpfad bestimmen
+  let imageName;
   if (role === "Werwolf") {
-    const randomWolfIndex = Math.floor(Math.random() * 3) + 1; // Zufällige Auswahl (z. B. Werwolf1.png, Werwolf2.png)
-    roleImage.src = `images/roles/Werwolf${randomWolfIndex}.PNG`;
+    const randomWolfIndex = Math.floor(Math.random() * 3) + 1;
+    imageName = `Werwolf${randomWolfIndex}.PNG`;
   } else {
-    roleImage.src = `images/roles/${role}.PNG`; // Bild basierend auf der Rolle
+    imageName = `${role}.PNG`;
   }
 
-  roleText.textContent = `Deine Rolle: ${role}`;
+  const frontPath = `images/roles/${imageName}`;
+  const backPath = `images/roles/${imageName.replace('.PNG', '2.PNG')}`;
+
+  // Bilder setzen
+  frontImage.src = frontPath;
+  backImage.src = backPath;
+
+  // Text und Karte anzeigen
   roleText.classList.remove('hidden');
-  roleText.appendChild(roleImage); // Bild hinzufügen
+  cardContainer.classList.remove('hidden');
+  card.classList.remove('flipped'); // ggf. zurücksetzen
+
+  // Klick zum Flippen
+  card.onclick = () => {
+    card.classList.toggle('flipped');
+  };
 
   document.getElementById('nextPlayerButton').classList.remove('hidden');
 }
+
+
 
 function nextPlayer() {
   currentPlayerIndex++;
@@ -241,13 +317,15 @@ function showLovers() {
 
 function startNight() {
   // Nur Rollen lebender Spieler berücksichtigen
-  const rolesInGame = playerData
+   const livingRoles = playerData
     .filter(p => !deadPlayers.includes(p.name))
     .map(p => p.role);
-  const uniqueRoles = new Set(rolesInGame);
 
   filteredPhases = fullPhases.filter(phase => {
-    return phase.role === null || uniqueRoles.has(phase.role);
+    // Phasen ohne Rolle (z.B. "Alle schlafen ein") immer anzeigen
+    if (!phase.role) return true;
+    // Sonst: Nur anzeigen, wenn die Rolle im Spiel und am Leben ist
+    return livingRoles.includes(phase.role);
   });
 
   currentPhaseIndex = 0;
@@ -260,7 +338,7 @@ function updateNightText() {
   const phase = filteredPhases[currentPhaseIndex];
 
   // Überspringe die Armor-Phase nach der ersten Nacht
-  if (phase.role === "Armor" && currentNight > 1) {
+  if (phase.role === "Amor" && currentNight > 1) {
     nextNightPhase();
     return;
   }
@@ -527,7 +605,7 @@ function killPlayer(player, overlay) {
 // Integration der Heiler-Phase in die Nachtphasen
 const fullPhases = [
   { role: null, text: "Alle schlafen ein" },
-  { role: "Armor", text: "Armor erwacht", action: () => { if (currentNight === 1) showArmorOverlay(); } },
+  { role: "Amor", text: "Armor erwacht", action: () => { if (currentNight === 1) showArmorOverlay(); } },
   { role: "Heiler", text: "Heiler erwacht", action: showHealerOverlay },
   { role: "Priest", text: "Priester erwacht", action: () => { if (!priestUsed) showPriestOverlay(); } },
   { role: "Leibwächter", text: "Leibwächter erwacht", action: showBodyguardOverlay },

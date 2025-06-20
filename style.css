@@ -1,0 +1,154 @@
+body {
+    font-family: sans-serif;
+    text-align: center;
+    padding: 20px;
+    color: white; /* Textfarbe für bessere Lesbarkeit */
+    margin: 0;
+    height: 100%;
+    }
+  
+  .background {
+    position: fixed;     /* fest am Bildschirm */
+    top: 0;
+    left: 0;
+    width: 100vw;       /* volle Breite */
+    height: 100vh;      /* volle Höhe */
+    background-image: url('images/waldhintergund.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: rgb(44, 29, 74);
+    z-index: -1;         /* hinter allen anderen Elementen */
+  }
+
+  #setup {
+    position: fixed;     /* fest am Bildschirm */
+    top: 0;
+    left: 0;
+    width: 100vw;       /* volle Breite */
+    height: 100vh;      /* volle Höhe */
+    background-image: url('images/Düsterwald.JPG');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: rgb(44, 29, 74);
+    z-index: -1;         /* hinter allen anderen Elementen */
+    text-align: center; /* Zentriert den gesamten Inhalt im Setup-Container */
+ }
+
+  #setup img {
+    width: 400px;
+    padding-top: 30px;
+    display: block;
+    margin: 0 auto; /* Bild zentrieren */
+  }
+  
+  #setup label,
+  #setup button {
+    display: block;
+    margin-top: 20px; /* Abstand zwischen den Elementen */
+    text-align: center; /* Text im Label und Button zentrieren */
+  }
+
+  .background {
+    background-image: url('images/Düsterwald.JPG'); /* Pfad zum Düsterwald-Bild */
+    background-size: cover; /* Bild wird skaliert, um den gesamten Bildschirm zu füllen */
+    background-position: center; /* Bild wird zentriert */
+    background-repeat: no-repeat; /* Bild wird nicht wiederholt */
+    background-color: black;
+}
+
+  .hidden { display: none; }
+
+  button {
+    padding: 15px 30px; /* Größere Buttons */
+    font-size: 18px; /* Größere Schrift */
+    margin: 15px; /* Mehr Abstand */
+    border-radius: 8px; /* Abgerundete Ecken */
+    border: 1px solid #ccc; /* Leichter Rahmen */
+    color: black;
+    background-color: rgba(240, 240, 240, 0.8); /* Transparenter Hintergrund */
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Glow-Effekt */
+    transition: box-shadow 0.3s ease; /* Animation für den Glow-Effekt */
+  }
+
+  a {
+    color: black !important;  /* Setzt die Farbe aller Links auf schwarz */
+    text-decoration: none;  /* Optional: Entfernt die Unterstreichung der Links */
+  }
+
+  button:hover {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); /* Stärkerer Glow-Effekt beim Hover */
+  }
+
+  button:active {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); /* Glow-Effekt beim Klick */
+  }
+
+  input[type="number"], input[type="checkbox"] {
+    font-size: 16px; /* Größere Eingabefelder */
+    margin: 10px;
+    background-color: rgba(255, 255, 255, 0.8); /* Transparenter Hintergrund */
+    border: 1px solid #ccc; /* Rahmen */
+    border-radius: 4px; /* Abgerundete Ecken */
+    padding: 5px;
+  }
+
+  h1 {
+    font-family: "mr-darcy", sans-serif;
+    font-weight: 600;
+    font-style: normal;
+    font-size: 50px; /* Größere Eingabefelder */
+    margin-bottom: 0px;
+  }
+
+h2 {
+    font-family: "mr-darcy", sans-serif;
+    font-weight: 600;
+    font-style: normal;
+    font-size: 25px; /* Größere Eingabefelder */
+  }
+
+  .card-container {
+    perspective: 1000px;
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  .card {
+    width: 300px;
+    height: 400px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s;
+    cursor: pointer;
+  }
+  
+  .card.flipped {
+    transform: rotateY(180deg);
+  }
+  
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .card-face img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  
+  .card-face.back {
+    transform: rotateY(180deg);
+  }
+  
+  input[type="checkbox"]:checked {
+    accent-color: #333; /* Dunkelgrau */
+  }
